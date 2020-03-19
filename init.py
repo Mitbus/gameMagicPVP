@@ -2,6 +2,7 @@ import pygame
 import time
 import game.gameObject as gobj
 import game.gameField as gfld
+import game.player as gplr
 
 
 def load_image(name):
