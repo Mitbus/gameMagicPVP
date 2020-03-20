@@ -21,8 +21,10 @@ def main(x_screen_size, y_screen_size):
     cur_time = time.time()
     window = pygame.display.set_mode((x_screen_size, y_screen_size))
     screen = pygame.Surface((x_screen_size, y_screen_size))
-    interface = pygame.Surface((150, 550))
-    default_field = gfld.GameField(10, 10)
+    interface_left = pygame.Surface((150, 550))
+    player_turn_color = pygame.Surface((50, 50))
+    interface_right = pygame.Surface((150, 550))
+    default_field = gfld.GameField(12, 16)
     default_field.map[0][0] = gobj.GameObject("Blue player", 1)  # see players_queue
     default_field.map[1][2] = gobj.GameObject("Red player", 0)
     default_field_x_size, default_field_y_size = default_field.get_field_size()
@@ -30,8 +32,8 @@ def main(x_screen_size, y_screen_size):
     selected_obj_pos = None
     click_pos = None
     players_queue = (
-        gplr.Player("red", 10, 5, 10, 10, 10),
-        gplr.Player("blue", 10, 5, 10, 10, 10)
+        gplr.Player("red", 10, 5, 5, 10, 10, 10),
+        gplr.Player("blue", 10, 5, 5, 10, 10, 10)
                      )
     player_turn = 0
     # loading sprites
@@ -66,6 +68,7 @@ def main(x_screen_size, y_screen_size):
 
         # every tick action
         if players_queue[player_turn].bp == 0:
+            players_queue[player_turn].bp = players_queue[player_turn].max_bp
             if len(players_queue) - 1 == player_turn:
                 player_turn = 0
             else:
@@ -76,15 +79,19 @@ def main(x_screen_size, y_screen_size):
         if selected_obj_pos is not None and selected_obj.team == player_turn:  # select correct hero
             if default_field.near_tiles(selected_obj_pos, clicked_tile_pos) \
                     and default_field.move_person(selected_obj_pos, clicked_tile_pos):
-                players_queue[player_turn].bp += 1
-
-
+                players_queue[player_turn].bp -= 1
         selected_obj = clicked_tile
         selected_obj_pos = clicked_tile_pos
+
         # draw field
         screen.fill((0, 125, 0))
-        screen.blit(interface, (25, 25))
-        screen.blit(interface, (x_screen_size - 25 - 150, 25))
+        if players_queue[player_turn].team == "red":  # team colors set
+            player_turn_color.fill((255, 0, 0))
+        if players_queue[player_turn].team == "blue":
+            player_turn_color.fill((0, 0, 255))
+        interface_left.blit(player_turn_color, (10, 10))
+        screen.blit(interface_left, (25, 25))
+        screen.blit(interface_right, (x_screen_size - 25 - 150, 25))
         double_x_ident = x_screen_size - (default_field_x_size + 0.5) * tiles_pixel_size
         for x in range(default_field_x_size):
             for y in range(default_field_y_size):
