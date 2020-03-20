@@ -23,17 +23,32 @@ def main(x_screen_size, y_screen_size):
     screen = pygame.Surface((x_screen_size, y_screen_size))
     interface = pygame.Surface((150, 550))
     default_field = gfld.GameField(10, 10)
+    default_field.map[0][0] = gobj.GameObject("Blue player", 1)  # see players_queue
+    default_field.map[1][2] = gobj.GameObject("Red player", 0)
     default_field_x_size, default_field_y_size = default_field.get_field_size()
+    selected_obj = None
+    selected_obj_pos = None
+    click_pos = None
+    players_queue = (
+        gplr.Player("red", 10, 5, 10, 10, 10),
+        gplr.Player("blue", 10, 5, 10, 10, 10)
+                     )
+    player_turn = 0
     # loading sprites
     tile = load_image('data/tile.gif')
-    player = load_image('data/blue_player.gif')
+    blue_player = load_image('data/blue_player.gif')
+    red_player = load_image('data/red_player.gif')
+    clicked = load_image('data/clicked.gif')
     # height align
     tiles_pixel_size = int(y_screen_size / (default_field_y_size * 0.75) - 0.25 * default_field_y_size)
     align = (tiles_pixel_size, tiles_pixel_size)
     tile = pygame.transform.scale(tile, align)
-    player = pygame.transform.scale(player, align)
-    done = False
-    while not done:
+    blue_player = pygame.transform.scale(blue_player, align)
+    red_player = pygame.transform.scale(red_player, align)
+    clicked = pygame.transform.scale(clicked, align)
+    run_game = True
+    while run_game:
+        # dt
         old_time = cur_time
         cur_time = time.time()
         dt = cur_time - old_time
@@ -42,28 +57,54 @@ def main(x_screen_size, y_screen_size):
             cur_time = time.time()
             dt = cur_time - old_time
 
+        # events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run_game = False
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                click_pos = event.pos
+
         # every tick action
+        if players_queue[player_turn].bp == 0:
+            if len(players_queue) - 1 == player_turn:
+                player_turn = 0
+            else:
+                player_turn += 1
+        # select game object
+        clicked_tile = default_field.get_clicked_obj()
+        clicked_tile_pos = default_field.get_clicked_pos()
+        if selected_obj_pos is not None and selected_obj.team == player_turn:  # select correct hero
+            if default_field.near_tiles(selected_obj_pos, clicked_tile_pos) \
+                    and default_field.move_person(selected_obj_pos, clicked_tile_pos):
+                players_queue[player_turn].bp += 1
+
+
+        selected_obj = clicked_tile
+        selected_obj_pos = clicked_tile_pos
+        # draw field
         screen.fill((0, 125, 0))
         screen.blit(interface, (25, 25))
         screen.blit(interface, (x_screen_size - 25 - 150, 25))
-        # draw field
         double_x_ident = x_screen_size - (default_field_x_size + 0.5) * tiles_pixel_size
         for x in range(default_field_x_size):
             for y in range(default_field_y_size):
-                x_locate = (x + (y % 2) / 2) * tiles_pixel_size + double_x_ident / 2
-                y_locate = tiles_pixel_size * y * 0.75
+                x_locate = int((x + (y % 2) / 2) * tiles_pixel_size + double_x_ident / 2)
+                y_locate = int(tiles_pixel_size * y * 0.74)
                 screen.blit(tile, (x_locate, y_locate))
-                if default_field.map[x][y].type == "Player":
-                    screen.blit(player, (x_locate, y_locate))
+                # click detecting of an inscribed circle
+                if click_pos is not None and (x_locate + tiles_pixel_size / 2 - click_pos[0]) ** 2\
+                        + (y_locate + tiles_pixel_size / 2 - click_pos[1]) ** 2 <= (tiles_pixel_size / 2 * 0.866) ** 2:
+                    default_field.set_clicked_pos((x, y))
+                    screen.blit(clicked, (x_locate, y_locate))
+                if default_field.map[x][y].type == "Blue player":
+                    screen.blit(blue_player, (x_locate, y_locate))
+                if default_field.map[x][y].type == "Red player":
+                    screen.blit(red_player, (x_locate, y_locate))
         window.blit(screen, (0, 0))
 
-        # events
-        for evnt in pygame.event.get():
-            if evnt.type == pygame.QUIT:
-                done = True
         pygame.display.update()
 
-
     pygame.quit()
+
 
 main(1200, 600)
