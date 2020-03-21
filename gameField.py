@@ -23,9 +23,6 @@ class GameField:
                     dist = GameField.tiles_dist((i, j), (radius, radius))
                     if dist > radius:
                         self.map[i][j].type = "No tile"
-                    if dist == 0:
-                        self.map[i][j].type = "Red player"
-                        self.map[i][j].team = 0
 
 
 
