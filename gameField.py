@@ -47,4 +47,40 @@ class GameField:
             return True
         return False
 
+    @staticmethod
+    def tiles_route(first_pos, second_pos):
+        route = [first_pos]
+        if first_pos == second_pos:
+            return route
+        cur_pos = first_pos
+        while not GameField.near_tiles(cur_pos, second_pos):
+            dx = second_pos[0] - cur_pos[0]
+            dy = second_pos[1] - cur_pos[1]
+            if dy == 0:
+                if dx > 0:
+                    cur_pos = (cur_pos[0] + 1, cur_pos[1])
+                else:
+                    cur_pos = (cur_pos[0] - 1, cur_pos[1])
+            else:
+                ctg = dx / dy
+                if ctg >= math.sqrt(3):
+                    cur_pos = (cur_pos[0] + 1, cur_pos[1])
+                elif ctg <= -math.sqrt(3):
+                    cur_pos = (cur_pos[0] - 1, cur_pos[1])
+                elif dy > 0:
+                    if ctg >= 0:
+                        cur_pos = (cur_pos[0] % 2 if cur_pos[0] + 1 else cur_pos[0], cur_pos[1] + 1)
+                    else:
+                        cur_pos = (cur_pos[0] % 2 if cur_pos[0] else cur_pos[0] - 1, cur_pos[1] + 1)
+                else:
+                    if ctg >= 0:
+                        cur_pos = (cur_pos[0] % 2 if cur_pos[0] + 1 else cur_pos[0], cur_pos[1] - 1)
+                    else:
+                        cur_pos = (cur_pos[0] % 2 if cur_pos[0] else cur_pos[0] - 1, cur_pos[1] - 1)
+            route.append(cur_pos)
+        route.append(second_pos)
+        return route
+
+
+
 

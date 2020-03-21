@@ -24,7 +24,7 @@ def main(x_screen_size, y_screen_size):
     interface_left = pygame.Surface((150, 550))
     player_turn_color = pygame.Surface((50, 50))
     interface_right = pygame.Surface((150, 550))
-    default_field = gfld.GameField(12, 16)
+    default_field = gfld.GameField(12, 20)
     default_field.map[0][0] = gobj.GameObject("Blue player", 1)  # see players_queue
     default_field.map[1][2] = gobj.GameObject("Red player", 0)
     default_field_x_size, default_field_y_size = default_field.get_field_size()
@@ -42,7 +42,8 @@ def main(x_screen_size, y_screen_size):
     red_player = load_image('data/red_player.gif')
     clicked = load_image('data/clicked.gif')
     # height align
-    tiles_pixel_size = int(y_screen_size / (default_field_y_size * 0.75) - 0.25 * default_field_y_size)
+    tiles_pixel_size = int(round(y_screen_size / ((default_field_y_size - 1) * 0.75 + 1)))
+    print(tiles_pixel_size)
     align = (tiles_pixel_size, tiles_pixel_size)
     tile = pygame.transform.scale(tile, align)
     blue_player = pygame.transform.scale(blue_player, align)
@@ -77,6 +78,11 @@ def main(x_screen_size, y_screen_size):
         clicked_tile = default_field.get_clicked_obj()
         clicked_tile_pos = default_field.get_clicked_pos()
         if selected_obj_pos is not None and selected_obj.team == player_turn:  # select correct hero
+            if selected_obj_pos != clicked_tile_pos:  # test
+                r = default_field.tiles_route(selected_obj_pos, clicked_tile_pos)
+                for i in r:
+                    print(i)
+                    default_field.map[i[0]][i[1]].type = "Red player"
             if default_field.near_tiles(selected_obj_pos, clicked_tile_pos) \
                     and default_field.move_person(selected_obj_pos, clicked_tile_pos):
                 players_queue[player_turn].bp -= 1
