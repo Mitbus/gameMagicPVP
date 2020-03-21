@@ -3,7 +3,7 @@ import math
 
 
 class GameField:
-    def __init__(self, size_x, size_y):
+    def __init__(self, size_x, size_y, field_type):
         self.map = []
         for i in range(size_x):
             map_y = []
@@ -12,6 +12,22 @@ class GameField:
             self.map.append(map_y)
         self.game_status = ""
         self.pos = None
+        if field_type == "hex":
+            radius = size_x
+            if size_x > size_y:
+                radius = size_y
+            radius = int(round(radius / 2))
+            print(radius)
+            for i in range(size_x):
+                for j in range(size_y):
+                    dist = GameField.tiles_dist((i, j), (radius, radius))
+                    if dist > radius:
+                        self.map[i][j].type = "No tile"
+                    if dist == 0:
+                        self.map[i][j].type = "Red player"
+                        self.map[i][j].team = 0
+
+
 
     def get_field_size(self):  # x, y value
         return len(self.map), len(self.map[0])
@@ -42,9 +58,11 @@ class GameField:
             return True
         if math.fabs(first_pos[1] - second_pos[1]) == 1 and first_pos[0] == second_pos[0]:
             return True
-        if math.fabs(first_pos[1] - second_pos[1]) == 1 and \
-                (first_pos[1] % 2 if first_pos[0] + 1 == second_pos[0] else first_pos[0] - 1 == second_pos[0]):
-            return True
+        if math.fabs(first_pos[1] - second_pos[1]) == 1:
+            if first_pos[1] % 2 and first_pos[0] + 1 == second_pos[0]:
+                return True
+            if not first_pos[1] % 2 and first_pos[0] - 1 == second_pos[0]:
+                return True
         return False
 
     @staticmethod
@@ -101,6 +119,11 @@ class GameField:
             route.append(cur_pos)
         route.append(second_pos)
         return route
+
+    @staticmethod
+    def tiles_dist(first_pos, second_pos):
+        return len(GameField.tiles_route(first_pos, second_pos)) - 1
+
 
 
 

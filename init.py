@@ -24,7 +24,7 @@ def main(x_screen_size, y_screen_size):
     interface_left = pygame.Surface((150, 550))
     player_turn_color = pygame.Surface((50, 50))
     interface_right = pygame.Surface((150, 550))
-    default_field = gfld.GameField(12, 20)
+    default_field = gfld.GameField(13, 13, "hex")
     default_field.map[0][0] = gobj.GameObject("Blue player", 1)  # see players_queue
     default_field.map[1][2] = gobj.GameObject("Red player", 0)
     default_field_x_size, default_field_y_size = default_field.get_field_size()
@@ -103,7 +103,8 @@ def main(x_screen_size, y_screen_size):
             for y in range(default_field_y_size):
                 x_locate = int((x + (y % 2) / 2) * tiles_pixel_size + double_x_ident / 2)
                 y_locate = int(tiles_pixel_size * y * 0.74)
-                screen.blit(tile, (x_locate, y_locate))
+                if default_field.map[x][y].type != "No tile":
+                    screen.blit(tile, (x_locate, y_locate))
                 # click detecting of an inscribed circle
                 if click_pos is not None and (x_locate + tiles_pixel_size / 2 - click_pos[0]) ** 2\
                         + (y_locate + tiles_pixel_size / 2 - click_pos[1]) ** 2 <= (tiles_pixel_size / 2 * 0.866) ** 2:
