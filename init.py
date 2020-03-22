@@ -25,29 +25,35 @@ def main(x_screen_size, y_screen_size):
     player_turn_color = pygame.Surface((50, 50))
     interface_right = pygame.Surface((150, 550))
     default_field = gfld.GameField(13, 13, "hex")
-    default_field.map[6][0].set_hero(gplr.Player("Red player", 0, 10, 10, 10, 10))  # see players_queue
-    default_field.map[6][12].set_hero(gplr.Player("Blue player", 1, 10, 10, 10, 10))
+    players = [
+        gplr.Player("Red player", 0, 10, 1, 10, 10, 10),
+        gplr.Player("Blue player", 1, 1, 1, 10, 10, 10)
+    ]
+    default_field.map[6][0].set_hero(players[0])  # see players_queue
+    default_field.map[6][12].set_hero(players[1])
     default_field_x_size, default_field_y_size = default_field.get_field_size()
     selected_obj = None
     selected_obj_pos = None
     click_pos = None
-    players_queue = (  # bp, max_bp
+    players_queue = (  # [bp, max_bp]
         [3, 3],
-        [3, 3]
+        [0, 3]
         )
     player_turn = 0
     # loading sprites
     tile = load_image('data/tile.gif')
+    clicked = load_image('data/clicked.gif')
+    bones = load_image('data/bones.gif')
     blue_player = load_image('data/blue_player.gif')
     red_player = load_image('data/red_player.gif')
-    clicked = load_image('data/clicked.gif')
     # height align
     tiles_pixel_size = int(round(y_screen_size / ((default_field_y_size - 1) * 0.75 + 1)))
     align = (tiles_pixel_size, tiles_pixel_size)
     tile = pygame.transform.scale(tile, align)
+    clicked = pygame.transform.scale(clicked, align)
+    bones = pygame.transform.scale(bones, align)
     blue_player = pygame.transform.scale(blue_player, align)
     red_player = pygame.transform.scale(red_player, align)
-    clicked = pygame.transform.scale(clicked, align)
     run_game = True
     while run_game:
         # dt
@@ -67,19 +73,27 @@ def main(x_screen_size, y_screen_size):
 
         # every tick action
         if players_queue[player_turn][0] == 0:
-            players_queue[player_turn][0] = players_queue[player_turn][1]
-            if len(players_queue) - 1 == player_turn:
+            click_pos = None
+            if len(players_queue) - 1 == player_turn:  # switch to anover
                 player_turn = 0
             else:
                 player_turn += 1
+            if players[player_turn].hp > 0:
+                players_queue[player_turn][0] = players_queue[player_turn][1]
         # select game object
         clicked_tile = default_field.get_clicked_obj()
         clicked_tile_pos = default_field.get_clicked_pos()
-        if clicked_tile_pos is not None and selected_obj_pos is not None and selected_obj.hero is not None \
-                and selected_obj.hero.team == player_turn:  # select correct hero
-            if default_field.near_tiles(selected_obj_pos, clicked_tile_pos) \
-                    and default_field.move_person(selected_obj_pos, clicked_tile_pos):
+        if clicked_tile_pos is not None and selected_obj_pos is not None and selected_obj.hero is not None:
+            if selected_obj.hero.team == player_turn and default_field.near_tiles(selected_obj_pos, clicked_tile_pos) \
+                    and default_field.move_person(selected_obj_pos, clicked_tile_pos):  # move hero
                 players_queue[player_turn][0] -= 1
+            elif clicked_tile.hero is not None and clicked_tile.hero.team != player_turn \
+                    and default_field.near_tiles(selected_obj_pos, clicked_tile_pos):  # dmg clicked hero
+                print(1)
+                players_queue[player_turn][0] -= 1
+                if clicked_tile.hero.get_dmg_is_dead(selected_obj.hero.dmg):
+                    clicked_tile.hero = None
+                    clicked_tile.placed_item = "Bones"
         selected_obj = clicked_tile
         selected_obj_pos = clicked_tile_pos
 
@@ -98,6 +112,7 @@ def main(x_screen_size, y_screen_size):
             for y in range(default_field_y_size):
                 x_locate = int((x + (y % 2) / 2) * tiles_pixel_size + double_x_ident / 2)
                 y_locate = int(tiles_pixel_size * y * 0.74)
+                # field_type
                 if default_field.map[x][y].field_type == "No tile":
                     continue
                 if default_field.map[x][y].field_type == "Empty":
@@ -108,6 +123,11 @@ def main(x_screen_size, y_screen_size):
                     default_field.set_clicked_pos((x, y))
                     screen.blit(clicked, (x_locate, y_locate))
                     clicked_on_map = True
+                # items
+                if default_field.map[x][y].placed_item is not None:
+                    if default_field.map[x][y].placed_item == "Bones":
+                        screen.blit(bones, (x_locate, y_locate))
+                # hero
                 if default_field.map[x][y].hero is not None:
                     if default_field.map[x][y].hero.type == "Blue player":
                         screen.blit(blue_player, (x_locate, y_locate))
