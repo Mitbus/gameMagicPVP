@@ -8,7 +8,7 @@ class GameField:
         for i in range(size_x):
             map_y = []
             for j in range(size_y):
-                map_y.append(gobj.GameObject("Empty", -1))
+                map_y.append(gobj.GameObject("Empty", None, stayable_type=True))
             self.map.append(map_y)
         self.game_status = ""
         self.pos = None
@@ -22,7 +22,8 @@ class GameField:
                 for j in range(size_y):
                     dist = GameField.tiles_dist((i, j), (radius, radius))
                     if dist > radius:
-                        self.map[i][j].type = "No tile"
+                        self.map[i][j].field_type = "No tile"
+                        self.map[i][j].stayable_type = False
 
 
 
@@ -42,9 +43,9 @@ class GameField:
             return self.map[self.pos[0]][self.pos[1]]
 
     def move_person(self, from_tile, to_tile):
-        if self.map[to_tile[0]][to_tile[1]].type == "Empty":  # Here person can stay
-            self.map[to_tile[0]][to_tile[1]] = self.map[from_tile[0]][from_tile[1]]
-            self.map[from_tile[0]][from_tile[1]] = gobj.GameObject("Empty", -1)  # Last status
+        if self.map[to_tile[0]][to_tile[1]].stayable_type and self.map[to_tile[0]][to_tile[1]].hero is None:  # Here person can stay
+            self.map[to_tile[0]][to_tile[1]].hero = self.map[from_tile[0]][from_tile[1]].hero
+            self.map[from_tile[0]][from_tile[1]].hero = None  # Last status
             return True
         else:
             return False
