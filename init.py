@@ -19,11 +19,9 @@ def main(x_screen_size, y_screen_size):
     pygame.init()
     # init code here
     cur_time = time.time()
-    window = pygame.display.set_mode((x_screen_size, y_screen_size))
+    window = pygame.display.set_mode((x_screen_size, y_screen_size))#,
+                                    # pygame.HWSURFACE|pygame.DOUBLEBUF|pygame.FULLSCREEN)
     screen = pygame.Surface((x_screen_size, y_screen_size))
-    interface_left = pygame.Surface((150, 550))
-    player_turn_color = pygame.Surface((50, 50))
-    interface_right = pygame.Surface((150, 550))
     default_field = gfld.GameField(13, 13, "hex")
     players = [
         gplr.Player("Red player", 0, 10, 1, 10, 10, 10),
@@ -54,6 +52,16 @@ def main(x_screen_size, y_screen_size):
     bones = pygame.transform.scale(bones, align)
     blue_player = pygame.transform.scale(blue_player, align)
     red_player = pygame.transform.scale(red_player, align)
+    # interface size
+    interface_x_len = int((x_screen_size - (default_field.get_field_size()[0] + 0.5) * tiles_pixel_size) / 2)
+    interface_y_len = y_screen_size
+    interface_left = pygame.Surface((interface_x_len, interface_y_len))
+    interface_left.set_alpha(30)
+    player_turn_color = pygame.Surface((interface_x_len // 7, interface_x_len // 7))
+    # TODO: add images
+    hero_hp_block = pygame.Surface((interface_x_len // 8, interface_x_len // 8))
+    hero_hp_block.fill((255, 0, 0))
+    interface_right = pygame.Surface((interface_x_len, interface_y_len))
     run_game = True
     while run_game:
         # dt
@@ -66,7 +74,7 @@ def main(x_screen_size, y_screen_size):
             dt = cur_time - old_time
         # events
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE or event.type == pygame.QUIT:
                 run_game = False
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 click_pos = event.pos
@@ -99,13 +107,32 @@ def main(x_screen_size, y_screen_size):
 
         # draw field
         screen.fill((0, 125, 0))
+        # interface
+        color = None
         if player_turn == 0:  # team colors set
-            player_turn_color.fill((255, 0, 0))
+            color = (255, 0, 0)
         if player_turn == 1:
-            player_turn_color.fill((0, 0, 255))
-        interface_left.blit(player_turn_color, (10, 10))
-        screen.blit(interface_left, (25, 25))
-        screen.blit(interface_right, (x_screen_size - 25 - 150, 25))
+            color = (0, 0, 255)
+        player_turn_color.fill(color)
+        text_color = (0, 0, 0)
+        if selected_obj is not None and selected_obj.hero is not None:
+            if selected_obj.hero.hp is not None:
+                screen.blit(pygame.font.Font(None, int(interface_x_len / 6)).render('HP:', 0, (255, 255, 255)),
+                                    (interface_x_len // 10, interface_x_len // 20 + interface_y_len // 20))
+                i = 0
+                while selected_obj.hero.hp > i:
+                    screen.blit(hero_hp_block,
+                                (int(interface_x_len // 20
+                                     + (i % 4) * interface_x_len // 6
+                                     + interface_x_len // 16 * 5),
+                                 int(interface_y_len // 20 * (1.2 + 0.7 * (i // 4)))))
+                    i += 1
+        screen.blit(pygame.font.Font(None, int(interface_x_len / 6)).render('Player turn:', 1, color),
+                            (interface_x_len // 10, interface_x_len // 20))
+        screen.blit(player_turn_color, (int(interface_x_len * 0.8), interface_x_len // 20))
+        screen.blit(interface_left, (0, 0))
+        screen.blit(interface_right, (int(x_screen_size - interface_x_len), 0))
+
         clicked_on_map = False
         double_x_ident = x_screen_size - (default_field_x_size + 0.5) * tiles_pixel_size
         for x in range(default_field_x_size):
@@ -143,4 +170,4 @@ def main(x_screen_size, y_screen_size):
     pygame.quit()
 
 
-main(1200, 600)
+main(1280, 720)
