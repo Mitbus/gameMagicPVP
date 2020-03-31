@@ -2,6 +2,10 @@ import game.gameObject as gobj
 import math
 
 
+class WrongFieldSizeException(Exception):
+    pass
+
+
 class GameField:
     def __init__(self, size_x, size_y, field_type):
         self.map = []
@@ -12,11 +16,11 @@ class GameField:
             self.map.append(map_y)
         self.game_status = ""
         self.pos = None
+        self.field_type = field_type
         if field_type == "hex":
-            radius = size_x
-            if size_x > size_y:
-                radius = size_y
-            radius = int(round(radius / 2))
+            if size_y != size_x or size_x % 2 == 0:
+                raise WrongFieldSizeException
+            radius = int(size_x / 2)
             print(radius)
             for i in range(size_x):
                 for j in range(size_y):
